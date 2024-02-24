@@ -126,7 +126,7 @@ function Mansession.session_save(opts)
   if file_name:len() == 0 then
     file_name = project_name()
   end
-  local file_path = sessionDir .. "/" .. file_name .. ".vim"
+  local file_path = sessionDir .. "/" .. file_name .. ".session"
   api.nvim_command("mksession! " .. fn.fnameescape(file_path))
   vim.notify("\nSession " .. file_name .. " is now persistent")
 end
