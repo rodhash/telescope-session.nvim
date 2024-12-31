@@ -44,7 +44,7 @@ function Mansession:start(opts)
                 api.nvim_command("mksession! " .. fn.fnameescape(current_spath))
               end
               -- Stop all LSP clients first
-              for _, client in pairs(lsp.get_active_clients()) do
+              for _, client in pairs(vim.lsp.get_clients()) do
                 lsp.stop_client(client)
               end
               -- Scedule buffers cleanup to avoid callback issues and source the session
@@ -79,6 +79,38 @@ function Mansession:start(opts)
               vim.cmd([[!rm ]] .. opts.sessionDir .. "/" .. "'" .. selection[1] .. "'")
             end
             return delete_session
+          end)()
+        )
+        -- From: yongtenglei/telescope-session.nvim
+        map(
+          "i",
+          "<cr>",
+          (function()
+            local load_session = function()
+              actions.close(prompt_bufnr)
+              local selection = action_state.get_selected_entry()
+              local current_spath = vim.v.this_session or ""
+              --save current session if exist
+              if current_spath ~= "" then
+                api.nvim_command("mksession! " .. fn.fnameescape(current_spath))
+              end
+            -- Stop all LSP clients first
+            for _, client in pairs(vim.lsp.get_clients()) do
+                lsp.stop_client(client)
+              end
+              -- Scedule buffers cleanup to avoid callback issues and source the session
+              vim.schedule(function()
+                -- save opened buffer and then delete buffer
+                api.nvim_cmd(api.nvim_parse_cmd("wall", {}), {})
+                api.nvim_cmd(api.nvim_parse_cmd("%bwipeout", {}), {})
+                -- source session
+                api.nvim_cmd(
+                  api.nvim_parse_cmd("source " .. opts.sessionDir .. "/" .. selection[1], {}),
+                  {}
+                )
+              end)
+            end
+            return load_session
           end)()
         )
         return true
